@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kuis Ranking Pasangan</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* Tata letak: satu kolom lebar untuk proyektor. Panggung soal di kiri, daftar murid di kanan, turun ke bawah di layar sempit. */
+:root {
+  --bg: #F2F6F7;
+  --surface: #FFFFFF;
+  --surface-2: #E8EFF1;
+  --ink: #12252C;
+  --muted: #56707A;
+  --line: #D3DEE2;
+  --accent: #0A7482;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #D9EEF1;
+  --warn: #8A5600;
+  --warn-soft: #FBEBC8;
+  --out: #B3332C;
+  --out-soft: #F8DDDA;
+  --ok: #26704B;
+  --ok-soft: #D9EFE3;
+  --font-d: 'Bricolage Grotesque', 'Trebuchet MS', 'Segoe UI', sans-serif;
+  --font-b: 'Figtree', 'Segoe UI', system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1A1F; --surface: #14262D; --surface-2: #1B323B; --ink: #E5F0F3; --muted: #93AAB3; --line: #2A434D;
+    --accent: #4FC4D1; --accent-ink: #052329; --accent-soft: #123941;
+    --warn: #F2C165; --warn-soft: #3B2C0E; --out: #FF8F86; --out-soft: #44201E; --ok: #7AD6A5; --ok-soft: #153A29;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1A1F; --surface: #14262D; --surface-2: #1B323B; --ink: #E5F0F3; --muted: #93AAB3; --line: #2A434D;
+  --accent: #4FC4D1; --accent-ink: #052329; --accent-soft: #123941;
+  --warn: #F2C165; --warn-soft: #3B2C0E; --out: #FF8F86; --out-soft: #44201E; --ok: #7AD6A5; --ok-soft: #153A29;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font-b); font-size: 16px; line-height: 1.5;
+  padding-block: 20px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+h1, h2, h3 { font-family: var(--font-d); margin: 0; line-height: 1.1; text-wrap: balance; }
+button, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.top h1 { font-size: clamp(1.5rem, 3.4vw, 2.1rem); font-weight: 800; letter-spacing: -0.01em; }
+.top .sub { color: var(--muted); font-size: 0.95rem; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+.kicker { text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.75rem; font-weight: 700; color: var(--muted); }
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 10px 16px; font-weight: 600; min-height: 44px; }
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.big { font-size: 1.15rem; padding: 14px 26px; min-height: 54px; }
+.btn.ghost { background: transparent; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+/* Pengaturan */
+.setup { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 18px; }
+@media (max-width: 800px) { .setup { grid-template-columns: minmax(0, 1fr); } }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label, .field .lbl { font-weight: 700; font-size: 0.92rem; }
+.field input[type=number] { width: 120px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); }
+.field textarea { width: 100%; min-height: 260px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); resize: vertical; line-height: 1.6; }
+.hint { color: var(--muted); font-size: 0.88rem; }
+.checks { display: flex; flex-direction: column; gap: 8px; }
+.checks label { display: flex; gap: 10px; align-items: center; min-height: 40px; }
+.checks input { width: 20px; height: 20px; accent-color: var(--accent); }
+.rules { margin: 0; padding-left: 1.1rem; color: var(--muted); font-size: 0.92rem; display: flex; flex-direction: column; gap: 4px; }
+.sample { display: inline-block; background: var(--warn-soft); color: var(--warn); border-radius: 6px; padding: 2px 8px; font-size: 0.8rem; font-weight: 700; }
+.err { color: var(--out); font-weight: 600; min-height: 1.4em; }
+
+/* Status */
+.status { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; }
+.stat b { display: block; font-family: var(--font-d); font-size: 1.9rem; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.meter { height: 10px; background: var(--surface-2); border-radius: 99px; overflow: hidden; }
+.meter i { display: block; height: 100%; background: var(--out); border-radius: 99px; transition: width 0.4s; }
+
+/* Panggung */
+.game { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 18px; align-items: start; }
+@media (max-width: 860px) { .game { grid-template-columns: minmax(0, 1fr); } }
+.stage { min-height: 380px; display: flex; flex-direction: column; justify-content: center; gap: 20px; text-align: center; padding: 26px 20px; }
+.stage.left { text-align: left; justify-content: flex-start; }
+.qbox { font-family: var(--font-d); font-weight: 800; font-size: clamp(2.2rem, 7.5vw, 5.4rem); line-height: 1.15; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+.qbox .eq { color: var(--accent); }
+.fr { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; line-height: 1.05; margin: 0 0.12em; font-size: 0.82em; }
+.fr > span:first-child { border-bottom: 0.08em solid currentColor; padding: 0 0.15em 0.04em; }
+.fr > span:last-child { padding: 0.04em 0.15em 0; }
+.timer { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.timer .bar { width: min(100%, 560px); height: 14px; background: var(--surface-2); border-radius: 99px; overflow: hidden; }
+.timer .bar i { display: block; height: 100%; width: 100%; background: var(--accent); border-radius: 99px; }
+.timer .bar.low i { background: var(--out); }
+.timer .sec { font-family: var(--font-d); font-weight: 800; font-size: 2.2rem; font-variant-numeric: tabular-nums; }
+.answer { background: var(--ok-soft); color: var(--ok); border-radius: 12px; padding: 14px 18px; font-family: var(--font-d); font-weight: 800; font-size: clamp(1.6rem, 4.5vw, 2.6rem); display: inline-block; align-self: center; }
+.answer small { display: block; font-family: var(--font-b); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; }
+.chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.chip { border: 2px solid var(--line); background: var(--surface); border-radius: 10px; min-height: 52px; padding: 8px 12px; font-weight: 600; text-align: left; }
+.chip[aria-pressed="true"] { border-color: var(--out); background: var(--out-soft); color: var(--out); text-decoration: line-through; }
+.note { border-radius: 10px; padding: 10px 14px; font-size: 0.92rem; text-align: left; }
+.note.warn { background: var(--warn-soft); color: var(--warn); }
+.note.info { background: var(--accent-soft); color: var(--ink); }
+.side h3 { font-size: 1.05rem; margin-bottom: 8px; }
+.side ul { list-style: none; margin: 0 0 16px; padding: 0; display: flex; flex-direction: column; gap: 2px; font-size: 0.95rem; }
+.side li { display: flex; justify-content: space-between; gap: 8px; padding: 4px 0; border-bottom: 1px dashed var(--line); }
+.side li span.r { color: var(--out); font-size: 0.8rem; font-weight: 700; white-space: nowrap; }
+.side .scroll { max-height: 300px; overflow-y: auto; }
+
+/* Hasil */
+.pairs { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.pair { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+.pair.trio { border-color: var(--accent); }
+.pair .no { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); display: flex; justify-content: space-between; }
+.pair .who { font-family: var(--font-d); font-weight: 800; font-size: 1.35rem; line-height: 1.2; }
+.tag { font-family: var(--font-b); font-size: 0.72rem; font-weight: 700; border-radius: 6px; padding: 1px 7px; margin-left: 6px; vertical-align: middle; }
+.tag.s { background: var(--ok-soft); color: var(--ok); }
+.tag.o { background: var(--out-soft); color: var(--out); }
+.switch { display: flex; gap: 10px; align-items: center; min-height: 44px; }
+.switch input { width: 20px; height: 20px; accent-color: var(--accent); }
+.copybox { width: 100%; min-height: 110px; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); }
+@media (prefers-reduced-motion: reduce) { .meter i { transition: none; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <h1>Kuis Ranking Pasangan</h1>
+    <span class="sub" id="sub">Eliminasi sampai setengah kelas, lalu murid dipasangkan otomatis.</span>
+  </header>
+  <main id="app"></main>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var KEY = 'krp-state-v1';
+  var SAMPLE = ['Aisyah', 'Bagas', 'Citra', 'Dimas', 'Eka', 'Farhan', 'Gita', 'Hanif', 'Intan', 'Joko', 'Kirana'];
+  var CATS = { hitung: 'Bilangan cacah', pecahan: 'Pecahan', konversi: 'Pecahan, persen, desimal' };
+
+  var S = null;      // keadaan permainan
+  var ui = { screen: 'setup', phase: 'ready', marks: {}, timer: null, q: null, showRoles: false, err: '', note: '', copyFail: false };
+  var soundOn = true, audio = null;
+
+  /* ---------- util ---------- */
+  function $(id) { return document.getElementById(id); }
+  function esc(t) { return String(t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function ri(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
+  function pick(a) { return a[ri(0, a.length - 1)]; }
+  function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = ri(0, i), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  function gcd(a, b) { a = Math.abs(a); b = Math.abs(b); while (b) { var t = a % b; a = b; b = t; } return a || 1; }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify({ S: S })); } catch (e) {} }
+  function load() { try { var r = localStorage.getItem(KEY); return r ? JSON.parse(r).S : null; } catch (e) { return null; } }
+  function clearSave() { try { localStorage.removeItem(KEY); } catch (e) {} }
+
+  /* ---------- pecahan & desimal ---------- */
+  function F(n, d) { return '<span class="fr"><span>' + n + '</span><span>' + d + '</span></span>'; }
+  function fr(n, d) { var g = gcd(n, d); return { n: n / g, d: d / g }; }
+  function fadd(a, b) { return fr(a.n * b.d + b.n * a.d, a.d * b.d); }
+  function fsub(a, b) { return fr(a.n * b.d - b.n * a.d, a.d * b.d); }
+  function fmul(a, b) { return fr(a.n * b.n, a.d * b.d); }
+  function fAns(x) {
+    if (x.d === 1) return String(x.n);
+    if (x.n > x.d) {
+      var w = Math.floor(x.n / x.d), r = x.n % x.d;
+      return F(x.n, x.d) + ' <span style="font-size:.7em;opacity:.8">= ' + w + ' ' + F(r, x.d) + '</span>';
+    }
+    return F(x.n, x.d);
+  }
+  function dec(v, scale) { // v bilangan bulat berskala (10 atau 100); tampil dengan koma
+    var digits = scale === 100 ? 2 : 1;
+    var s = (v / scale).toFixed(digits).replace('.', ',');
+    return s;
+  }
+  function decTrim(v, scale) { var s = dec(v, scale); if (s.indexOf(',') >= 0) s = s.replace(/0+$/, '').replace(/,$/, ''); return s; }
+
+  /* ---------- pembuat soal ---------- */
+  function genHitung(lv) {
+    var a, b, c, d, e, k;
+    if (lv === 1) { a = ri(12, 40); b = ri(5, 30); c = ri(3, 25); return { q: a + ' + ' + b + ' − ' + c, a: String(a + b - c) }; }
+    if (lv === 2) { a = ri(3, 9); b = ri(4, 12); c = ri(5, 30); return { q: a + ' × ' + b + ' + ' + c, a: String(a * b + c) }; }
+    if (lv === 3) { a = ri(10, 30); b = ri(5, 20); c = ri(2, 6); d = ri(5, 30); return { q: '(' + a + ' + ' + b + ') × ' + c + ' − ' + d, a: String((a + b) * c - d) }; }
+    if (lv === 4) { d = ri(2, 6); c = d * ri(3, 12); a = ri(6, 15); b = ri(3, 9); return { q: a + ' × ' + b + ' − ' + c + ' ÷ ' + d, a: String(a * b - c / d) }; }
+    e = ri(2, 6); k = ri(3, 9); d = e * k; a = ri(30, 60); b = ri(5, 25); c = ri(2, 5);
+    return { q: '(' + a + ' − ' + b + ') × ' + c + ' + ' + d + ' ÷ ' + e, a: String((a - b) * c + d / e) };
+  }
+  function genPecahan(lv) {
+    var d, d1, d2, n1, n2, n3, x, y, z, t = 0;
+    if (lv === 1) {
+      d = ri(4, 10); n1 = ri(1, d - 1); n2 = ri(1, d - 1);
+      return { q: F(n1, d) + ' + ' + F(n2, d), a: fAns(fadd(fr(n1, d), fr(n2, d))) };
+    }
+    if (lv === 2) {
+      d1 = pick([2, 3, 4, 5]); d2 = d1 * pick([2, 3]); n1 = ri(1, d1 - 1); n2 = ri(1, d2 - 1);
+      return { q: F(n1, d1) + ' + ' + F(n2, d2), a: fAns(fadd(fr(n1, d1), fr(n2, d2))) };
+    }
+    if (lv === 3) {
+      do { d1 = pick([2, 3, 4, 6, 8]); d2 = pick([2, 3, 4, 6, 8]); n1 = ri(1, d1 * 2); n2 = ri(1, d2 - 1); x = fsub(fr(n1, d1), fr(n2, d2)); t++; } while ((x.n <= 0 || d1 === d2) && t < 200);
+      return { q: F(n1, d1) + ' − ' + F(n2, d2), a: fAns(x) };
+    }
+    if (lv === 4) {
+      if (Math.random() < 0.5) {
+        d = pick([3, 4, 5, 6, 8]); n1 = ri(1, d - 1); y = d * ri(1, 3) + (Math.random() < 0.5 ? 0 : ri(1, 3));
+        return { q: F(n1, d) + ' × ' + y, a: fAns(fmul(fr(n1, d), fr(y, 1))) };
+      }
+      d1 = pick([2, 3, 4, 5]); d2 = pick([3, 4, 5, 6]); n1 = ri(1, d1 - 1) || 1; n2 = ri(1, d2 - 1);
+      return { q: F(n1, d1) + ' × ' + F(n2, d2), a: fAns(fmul(fr(n1, d1), fr(n2, d2))) };
+    }
+    do {
+      var ds = [2, 3, 4, 6]; d1 = pick(ds); d2 = pick(ds); d = pick(ds);
+      n1 = ri(1, d1 * 2); n2 = ri(1, d2); n3 = ri(1, d);
+      z = fsub(fadd(fr(n1, d1), fr(n2, d2)), fr(n3, d)); t++;
+    } while ((z.n <= 0 || n1 % d1 === 0 || n2 % d2 === 0 || n3 % d === 0 || gcd(n1, d1) > 1 || gcd(n2, d2) > 1 || gcd(n3, d) > 1) && t < 500);
+    return { q: F(n1, d1) + ' + ' + F(n2, d2) + ' − ' + F(n3, d), a: fAns(z) };
+  }
+  function pct(v) { return String(v).replace('.', ',') + '%'; }
+  function decStr(v1000) { var s = (v1000 / 1000).toFixed(3).replace('.', ','); return s.replace(/0+$/, '').replace(/,$/, ''); }
+  function genKonversi(lv) {
+    var d, n, p, x, w;
+    if (lv === 1) {
+      d = pick([2, 4, 5, 10]); n = ri(1, d - 1);
+      return { q: 'Ubah ' + F(n, d) + ' menjadi persen', a: pct(n * 100 / d), noEq: true };
+    }
+    if (lv === 2) {
+      p = pick([10, 20, 25, 40, 50, 60, 75, 80, 90, 35, 45, 65]);
+      return { q: 'Ubah ' + p + '% menjadi pecahan paling sederhana', a: fAns(fr(p, 100)), noEq: true };
+    }
+    if (lv === 3) {
+      d = pick([2, 4, 5, 8, 20, 25]); do { n = ri(1, d - 1); } while (gcd(n, d) !== 1);
+      return { q: 'Ubah ' + F(n, d) + ' menjadi desimal', a: decStr(n * 1000 / d), noEq: true };
+    }
+    if (lv === 4) {
+      do { x = ri(5, 175); } while (x % 100 === 0);
+      return { q: 'Ubah ' + dec(x, 100).replace(/0$/, '') + ' menjadi pecahan paling sederhana', a: fAns(fr(x, 100)), noEq: true };
+    }
+    var t = ri(1, 3);
+    if (t === 1) { w = ri(1, 2); d = pick([2, 4, 5]); do { n = ri(1, d - 1); } while (gcd(n, d) !== 1); return { q: 'Ubah ' + w + ' ' + F(n, d) + ' menjadi persen', a: pct(w * 100 + n * 100 / d), noEq: true }; }
+    if (t === 2) { p = pick([12.5, 37.5, 62.5, 87.5]); return { q: 'Ubah ' + pct(p) + ' menjadi pecahan', a: fAns(fr(p * 10, 1000)), noEq: true }; }
+    x = ri(1, 3) * 25 + pick([0, 100]);
+    return { q: 'Ubah ' + dec(x, 100).replace(/0$/, '') + ' menjadi persen', a: pct(x), noEq: true };
+  }
+  function makeQuestion() {
+    var cats = S.cats, cat = cats[(S.round - 1) % cats.length];
+    var lv = Math.min(5, S.round);
+    var g = cat === 'hitung' ? genHitung(lv) : cat === 'pecahan' ? genPecahan(lv) : genKonversi(lv);
+    return { cat: cat, lv: lv, q: g.q, a: g.a, noEq: !!g.noEq };
+  }
+
+  /* ---------- logika kuis ---------- */
+  function outCount() { return S.students.filter(function (s) { return s.out; }).length; }
+  function aliveList() { return S.students.filter(function (s) { return !s.out; }); }
+
+  function startGame(names, n, secs, cats, raise) {
+    var list = [];
+    for (var i = 0; i < n; i++) list.push({ id: i, name: names[i] || ('Murid ' + (i + 1)), out: false, outRound: 0, tie: Math.random() });
+    S = { students: list, n: n, target: Math.floor(n / 2), round: 1, secs: secs, raise: raise, cats: cats, done: false };
+    ui.phase = 'ready'; ui.marks = {}; ui.note = ''; ui.copyFail = false; ui.showRoles = false;
+    ui.q = makeQuestion(); ui.screen = 'game'; save(); render();
+  }
+
+  function runTimer(total, onEnd) {
+    var t0 = performance.now();
+    clearInterval(ui.timer);
+    ui.timer = setInterval(function () {
+      var left = total - (performance.now() - t0);
+      var bar = document.getElementById('tbar'), sec = document.getElementById('tsec'), box = document.getElementById('tbox');
+      if (left <= 0) { clearInterval(ui.timer); ui.timer = null; onEnd(); return; }
+      if (bar) { bar.style.width = (left / total * 100) + '%'; if (box) box.classList.toggle('low', left < 4000); }
+      if (sec) sec.textContent = Math.ceil(left / 1000);
+    }, 100);
+  }
+  function showQuestion() {
+    ui.phase = 'showing'; ui.copyFail = false; render(); musicStart();
+    runTimer(S.secs * 1000, function () {
+      beep(520, 0.25);
+      ui.phase = 'raise'; render();
+      runTimer(S.raise * 1000, function () { beep(880, 0.6); musicStop(); ui.phase = 'hidden'; render(); });
+    });
+  }
+
+  /* ---------- musik debar-debar (dibuat dengan WebAudio, tanpa berkas) ---------- */
+  var mus = { on: false, tm: null, drone: null };
+  function ensureAudio() {
+    audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+    if (audio.state === 'suspended') audio.resume();
+    return audio;
+  }
+  function kick(t, vol) {
+    var o = audio.createOscillator(), g = audio.createGain();
+    o.type = 'sine'; o.frequency.setValueAtTime(130, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.14);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+    o.connect(g); g.connect(audio.destination); o.start(t); o.stop(t + 0.25);
+  }
+  function tick(t, vol, f) {
+    var o = audio.createOscillator(), g = audio.createGain();
+    o.type = 'square'; o.frequency.value = f;
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+    o.connect(g); g.connect(audio.destination); o.start(t); o.stop(t + 0.06);
+  }
+  function musicStart() {
+    if (!soundOn || mus.on) return;
+    try {
+      ensureAudio(); mus.on = true;
+      var d1 = audio.createOscillator(), d2 = audio.createOscillator(), dg = audio.createGain(), lp = audio.createBiquadFilter();
+      d1.type = d2.type = 'sawtooth'; d1.frequency.value = 55; d2.frequency.value = 58.3;
+      lp.type = 'lowpass'; lp.frequency.value = 220; dg.gain.value = 0.05;
+      d1.connect(lp); d2.connect(lp); lp.connect(dg); dg.connect(audio.destination); d1.start(); d2.start();
+      mus.drone = { stop: function () { try { d1.stop(); d2.stop(); } catch (e) {} } };
+      var beat = 0;
+      (function loop() {
+        if (!mus.on) return;
+        var lv = ui.q ? ui.q.lv : 1, raise = ui.phase === 'raise';
+        var bpm = 78 + lv * 9 + (raise ? 34 : 0), ms = 60000 / bpm, t = audio.currentTime + 0.03;
+        kick(t, 0.9); kick(t + 0.17, 0.6);
+        if (raise || beat % 2 === 1) tick(t + ms / 2000, 0.03, raise ? 1320 : 990);
+        beat++; mus.tm = setTimeout(loop, ms);
+      })();
+    } catch (e) { mus.on = false; }
+  }
+  function musicStop() {
+    mus.on = false; clearTimeout(mus.tm);
+    if (mus.drone) { mus.drone.stop(); mus.drone = null; }
+  }
+
+  function beep(freq, dur) {
+    if (!soundOn) return;
+    try {
+      ensureAudio();
+      var o = audio.createOscillator(), g = audio.createGain();
+      o.frequency.value = freq || 660; o.connect(g); g.connect(audio.destination);
+      g.gain.setValueAtTime(0.0001, audio.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.25, audio.currentTime + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + (dur || 0.5));
+      o.start(); o.stop(audio.currentTime + (dur || 0.5) + 0.05);
+    } catch (e) {}
+  }
+
+  function confirmRound() {
+    var marked = aliveList().filter(function (s) { return ui.marks[s.id]; });
+    marked.forEach(function (s) { s.out = true; s.outRound = S.round; });
+    var total = outCount();
+    ui.note = total > S.target ? ('Pada ronde ' + S.round + ' yang gugur ' + total + ' murid, sudah lebih dari setengah kelas. Kuis dihentikan dan murid langsung dipasangkan.') : '';
+    ui.marks = {};
+    if (total >= S.target) { S.done = true; ui.screen = 'result'; musicStop(); save(); render(); return; }
+    S.round++; ui.q = makeQuestion(); ui.phase = 'ready'; save(); render();
+  }
+
+  function buildPairs() {
+    /* urutan kuat -> lemah: yang bertahan (acak), lalu yang gugur makin lambat makin kuat.
+       Murid terkuat dipasangkan dengan yang terlemah, dst. Jika ganjil, murid tengah masuk kelompok terakhir. */
+    var out = S.students.filter(function (s) { return s.out; }).sort(function (a, b) { return b.outRound - a.outRound || a.tie - b.tie; });
+    var L = shuffle(aliveList()).concat(out), n = L.length, g = Math.floor(n / 2), pairs = [];
+    function m(s) { return { s: s, role: s.out ? 'o' : 's' }; }
+    for (var i = 0; i < g; i++) pairs.push([m(L[i]), m(L[n - 1 - i])]);
+    if (n % 2 === 1) pairs[g - 1].push(m(L[g]));
+    return pairs;
+  }
+  function pairsText() {
+    return buildPairsCache.map(function (p, i) {
+      var names = p.map(function (m) { return m.s.name; });
+      var txt = names.length === 3 ? names[0] + ', ' + names[1] + ' & ' + names[2] : names.join(' & ');
+      return 'Pasangan ' + (i + 1) + (names.length === 3 ? ' (3 orang)' : '') + ': ' + txt;
+    }).join('\n');
+  }
+  var buildPairsCache = [];
+
+  /* ---------- tampilan ---------- */
+  function render() {
+    var app = $('app');
+    if (ui.screen === 'setup') { app.innerHTML = setupHTML(); bindSetup(); return; }
+    if (ui.screen === 'game') { app.innerHTML = gameHTML(); return; }
+    app.innerHTML = resultHTML();
+  }
+
+  function setupHTML() {
+    var saved = load(), resume = saved && !saved.done && saved.students;
+    return '' +
+      (resume ? '<div class="card note info" style="margin-bottom:18px"><div class="row" style="justify-content:space-between"><span>Ada kuis yang belum selesai: ronde ' + saved.round + ', ' + saved.students.filter(function (s) { return !s.out; }).length + ' murid masih bertahan.</span><span class="row"><button class="btn primary" data-a="resume">Lanjutkan</button><button class="btn ghost" data-a="dropsave">Hapus</button></span></div></div>' : '') +
+      '<div class="setup">' +
+      '<section class="card field" style="gap:14px">' +
+        '<div class="row" style="justify-content:space-between"><h2 style="font-size:1.3rem">Daftar murid</h2><span class="sample">Contoh, ganti dengan nama kelas Anda</span></div>' +
+        '<div class="field"><label for="n">Jumlah murid</label><input id="n" type="number" min="2" max="60" value="' + SAMPLE.length + '"></div>' +
+        '<div class="field"><label for="names">Nama murid (satu nama per baris)</label><textarea id="names" spellcheck="false">' + esc(SAMPLE.join('\n')) + '</textarea>' +
+        '<span class="hint">Jumlah murid mengikuti banyak baris. Jika baris kurang dari jumlah, sisanya diisi “Murid 1, Murid 2, …”.</span></div>' +
+      '</section>' +
+      '<section class="card" style="display:flex;flex-direction:column;gap:16px">' +
+        '<h2 style="font-size:1.3rem">Pengaturan soal</h2>' +
+        '<div class="field"><label for="secs">Lama soal tampil (detik)</label><input id="secs" type="number" min="5" max="60" value="15"></div>' +
+        '<div class="field"><label for="raise">Waktu menulis dan mengangkat jawaban (detik)</label><input id="raise" type="number" min="3" max="30" value="5"></div><div class="field"><span class="lbl">Jenis soal (bergantian tiap ronde)</span><div class="checks">' +
+          '<label><input type="checkbox" id="c-hitung" checked> Operasi hitung bilangan cacah</label>' +
+          '<label><input type="checkbox" id="c-pecahan" checked> Operasi hitung pecahan</label>' +
+          '<label><input type="checkbox" id="c-konversi" checked> Mengubah pecahan, persen, dan desimal</label></div></div>' +
+        '<ul class="rules"><li>Soal tampil di layar sesuai lama yang diatur, lalu hilang.</li><li>Setelah itu murid punya waktu singkat untuk menulis jawaban di buku dan mengangkatnya.</li><li>Guru mengetuk nama murid yang salah. Murid itu gugur.</li><li>Kuis berhenti saat setengah murid gugur, tanpa soal lagi, lalu pasangan langsung dibuat. Jika jumlah murid ganjil, kelompok terakhir 3 orang.</li><li>Soal makin sulit setiap ronde. Musik debar-debar mengiringi soal dan waktu mengangkat jawaban.</li><li>Jika yang gugur di satu ronde sudah melebihi setengah kelas, kuis langsung berhenti dan murid dipasangkan.</li></ul>' +
+        '<div class="err" id="err" role="alert">' + esc(ui.err) + '</div>' +
+        '<button class="btn primary big" data-a="start">Mulai Kuis</button>' +
+      '</section></div>';
+  }
+  function bindSetup() {
+    var ta = $('names'), n = $('n');
+    ta.addEventListener('input', function () {
+      var c = ta.value.split('\n').map(function (x) { return x.trim(); }).filter(Boolean).length;
+      if (c > 0) n.value = c;
+    });
+  }
+
+  function gameHTML() {
+    var alive = aliveList(), outs = S.students.filter(function (s) { return s.out; });
+    var need = S.target - outs.length, pct = Math.round(outs.length / S.target * 100);
+    var q = ui.q, st = '';
+    var head = '<div class="kicker">Ronde ' + S.round + ' · ' + CATS[q.cat] + ' · tingkat ' + q.lv + '</div>';
+
+    if (ui.phase === 'ready') {
+      st = '<div class="stage card">' + head +
+        (ui.note ? '<div class="note warn">' + esc(ui.note) + '</div>' : '') +
+        '<h2 style="font-size:clamp(1.6rem,4vw,2.4rem)">Siap menulis di buku?</h2>' +
+        '<p class="hint" style="margin:0">Soal tampil ' + S.secs + ' detik, lalu hilang dari layar.</p>' +
+        '<div class="row" style="justify-content:center"><button class="btn primary big" data-a="show">Tampilkan soal</button><button class="btn ghost" data-a="swap">Ganti soal</button></div></div>';
+    } else if (ui.phase === 'showing') {
+      st = '<div class="stage card">' + head + '<div class="qbox" aria-live="off">' + q.q + (q.noEq ? '' : ' <span class="eq">= ?</span>') + '</div>' +
+        '<div class="timer"><div class="bar" id="tbox"><i id="tbar"></i></div><div class="sec" id="tsec">' + S.secs + '</div></div></div>';
+    } else if (ui.phase === 'raise') {
+      st = '<div class="stage card">' + head + '<h2 style="font-size:clamp(2rem,6vw,3.6rem)">Tulis jawabanmu di buku!</h2><p style="margin:0;font-size:1.2rem">Angkat bukumu ke atas sebelum waktu habis.</p>' +
+        '<div class="timer"><div class="bar" id="tbox"><i id="tbar"></i></div><div class="sec" id="tsec">' + S.raise + '</div></div></div>';
+    } else if (ui.phase === 'hidden') {
+      st = '<div class="stage card">' + head +
+        '<h2 style="font-size:clamp(2rem,6vw,3.6rem)">Waktu habis! Angkat jawaban ke atas</h2>' +
+        '<p style="margin:0;font-size:1.2rem">Guru memeriksa buku murid, lalu membuka kunci jawaban.</p>' +
+        '<div class="row" style="justify-content:center"><button class="btn primary big" data-a="reveal">Lihat kunci jawaban</button></div></div>';
+    } else {
+      var k = Object.keys(ui.marks).length;
+      var warn = k > need ? '<div class="note warn">Yang ditandai (' + k + ') melebihi sisa kuota (' + need + '). Semuanya gugur dan kuis langsung berhenti ke pembagian pasangan.</div>' : '';
+      st = '<div class="stage card left">' + head +
+        '<div style="text-align:center"><div class="answer"><small>Kunci jawaban</small>' + q.a + '</div></div>' +
+        '<div class="note info">Ketuk nama murid yang jawabannya <b>salah</b>. Murid yang tidak ditandai tetap bertahan.</div>' +
+        '<div class="chips">' + alive.map(function (s) { return '<button class="chip" data-a="mark" data-id="' + s.id + '" aria-pressed="' + (ui.marks[s.id] ? 'true' : 'false') + '">' + esc(s.name) + '</button>'; }).join('') + '</div>' +
+        warn +
+        '<div class="row" style="justify-content:space-between"><span class="hint">Ditandai salah: <b>' + k + '</b> · Sisa kuota gugur: <b>' + need + '</b></span>' +
+        '<span class="row"><button class="btn primary big" data-a="done">Selesai ronde</button></span></div></div>';
+    }
+
+    return '<div class="status">' +
+        '<div class="stat"><span class="kicker">Ronde</span><b>' + S.round + '</b></div>' +
+        '<div class="stat"><span class="kicker">Bertahan</span><b>' + alive.length + '</b></div>' +
+        '<div class="stat"><span class="kicker">Gugur / target</span><b>' + outs.length + ' / ' + S.target + '</b></div></div>' +
+      '<div class="meter" style="margin:12px 0 18px" role="progressbar" aria-valuemin="0" aria-valuemax="' + S.target + '" aria-valuenow="' + outs.length + '" aria-label="Murid gugur"><i style="width:' + pct + '%"></i></div>' +
+      '<div class="game">' + st +
+      '<aside class="card side"><h3>Bertahan (' + alive.length + ')</h3><ul class="scroll">' + alive.map(function (s) { return '<li>' + esc(s.name) + '</li>'; }).join('') + '</ul>' +
+      '<h3>Gugur (' + outs.length + ')</h3><ul class="scroll">' + (outs.length ? outs.map(function (s) { return '<li>' + esc(s.name) + '<span class="r">ronde ' + s.outRound + '</span></li>'; }).join('') : '<li class="hint">Belum ada</li>') + '</ul>' +
+      '<div class="row"><button class="btn ghost" data-a="sound">Suara: ' + (soundOn ? 'aktif' : 'mati') + '</button><button class="btn ghost" data-a="reset">Ulangi dari awal</button></div></aside></div>';
+  }
+
+  function resultHTML() {
+    buildPairsCache = buildPairsCache.length && ui.pairsFor === S ? buildPairsCache : (ui.pairsFor = S, buildPairs());
+    var P = buildPairsCache, trio = P.filter(function (p) { return p.length === 3; }).length;
+    return '<section class="card" style="display:flex;flex-direction:column;gap:14px">' +
+      '<div class="row" style="justify-content:space-between"><div><div class="kicker">Kuis selesai di ronde ' + S.round + '</div><h2 style="font-size:clamp(1.6rem,4vw,2.4rem)">' + P.length + ' kelompok siap</h2>' +
+      '<span class="hint">' + S.n + ' murid' + (trio ? ', kelompok terakhir 3 orang' : ', semua berpasangan') + '.</span></div>' +
+      '<div class="row"><button class="btn primary" data-a="copy">Salin daftar</button><button class="btn" data-a="again">Kuis baru</button></div></div>' +
+      '<label class="switch"><input type="checkbox" id="roles" data-a="roles"' + (ui.showRoles ? ' checked' : '') + '> Tampilkan peran (khusus guru, sembunyikan saat layar dilihat murid)</label>' +
+      (ui.note ? '<div class="note warn">' + esc(ui.note) + '</div>' : '') +
+      (ui.copyFail ? '<div class="note info">Salin otomatis tidak didukung. Pilih teks di bawah lalu tekan Ctrl+C.<textarea class="copybox" id="cb" readonly>' + esc(pairsText()) + '</textarea></div>' : '') +
+      '</section>' +
+      '<div class="pairs">' + P.map(function (p, i) {
+        return '<div class="pair' + (p.length === 3 ? ' trio' : '') + '"><div class="no"><span>Pasangan ' + (i + 1) + '</span><span>' + (p.length === 3 ? '3 orang' : '') + '</span></div>' +
+          p.map(function (m) { return '<div class="who">' + esc(m.s.name) + (ui.showRoles ? '<span class="tag ' + m.role + '">' + (m.role === 's' ? 'bertahan' : 'gugur r' + m.s.outRound) + '</span>' : '') + '</div>'; }).join('') + '</div>';
+      }).join('') + '</div>';
+  }
+
+  /* ---------- aksi ---------- */
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-a]'); if (!t) return;
+    var a = t.getAttribute('data-a');
+    if (a === 'start') {
+      var lines = $('names').value.split('\n').map(function (x) { return x.trim(); }).filter(Boolean);
+      var n = parseInt($('n').value, 10), secs = parseInt($('secs').value, 10) || 15, raise = parseInt($('raise').value, 10) || 5;
+      var cats = ['hitung', 'pecahan', 'konversi'].filter(function (c) { return $('c-' + c).checked; });
+      if (!(n >= 2)) { ui.err = 'Jumlah murid minimal 2.'; $('err').textContent = ui.err; return; }
+      if (!cats.length) { ui.err = 'Pilih minimal satu jenis soal.'; $('err').textContent = ui.err; return; }
+      ui.err = ''; secs = Math.min(60, Math.max(5, secs)); raise = Math.min(30, Math.max(3, raise)); buildPairsCache = [];
+      startGame(lines, n, secs, cats, raise);
+    } else if (a === 'resume') { S = load(); S.raise = S.raise || 5; S.cats = (S.cats || []).map(function (c) { return c === 'desimal' ? 'konversi' : c; }); ui.screen = S.done ? 'result' : 'game'; ui.phase = 'ready'; ui.marks = {}; ui.q = makeQuestion(); ui.note = ''; buildPairsCache = []; render(); }
+    else if (a === 'dropsave') { clearSave(); render(); }
+    else if (a === 'show') showQuestion();
+    else if (a === 'swap') { ui.q = makeQuestion(); render(); }
+    else if (a === 'reveal') { ui.phase = 'marking'; render(); }
+    else if (a === 'mark') { var id = t.getAttribute('data-id'); if (ui.marks[id]) delete ui.marks[id]; else ui.marks[id] = true; render(); }
+    else if (a === 'done') confirmRound();
+    else if (a === 'sound') { soundOn = !soundOn; if (!soundOn) musicStop(); else if (ui.phase === 'showing' || ui.phase === 'raise') musicStart(); render(); }
+    else if (a === 'reset' || a === 'again') { clearInterval(ui.timer); musicStop(); clearSave(); S = null; ui.screen = 'setup'; ui.note = ''; buildPairsCache = []; render(); }
+    else if (a === 'roles') { ui.showRoles = t.checked; render(); }
+    else if (a === 'copy') {
+      var txt = pairsText();
+      try { navigator.clipboard.writeText(txt).then(function () { ui.copyFail = false; ui.note = 'Daftar pasangan disalin.'; render(); }, function () { ui.copyFail = true; render(); }); }
+      catch (err) { ui.copyFail = true; render(); }
+    }
+  });
+
+  render();
+})();
+</script>
+
+</body>
+</html>
